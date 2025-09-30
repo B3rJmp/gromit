@@ -51,9 +51,8 @@ def launch_roku_video(video_id):
     # Adjust volume consistently
     set_roku_volume(TARGET_VOLUME)
 
-@simon_bp.route("/start-lofi", methods=["GET"])
-def start_lofi():
-    token = request.args.get("token")
+@simon_bp.route("/start-lofi/<token>", methods=["GET"])
+def start_lofi(token):
     if token != WEBHOOK_TOKEN:
         abort(403)
 
