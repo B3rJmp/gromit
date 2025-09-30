@@ -8,5 +8,10 @@ services:
       - "5000:5000"
     env_file:
       - .env
+    volumes:
+      - .:/gromit      # Mount current directory to /app in container
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development  # Enables hot reload
+      - PYTHONUNBUFFERED=1
     restart: unless-stopped
-
