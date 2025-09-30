@@ -3,8 +3,7 @@ import time
 import requests
 import threading
 from app import db
-from app.models.user import User
-from app.models.host import Host
+from app.models import User, Host
 from flask import abort, Blueprint, current_app
 
 simon_bp = Blueprint("simon_bp", __name__, url_prefix="/simon")
@@ -50,7 +49,7 @@ def launch_roku_video(video_id, SIMON):
     time.sleep(3)
 
     # Adjust volume consistently
-    set_roku_volume(TARGET_VOLUME, simon)
+    set_roku_volume(TARGET_VOLUME, SIMON)
 
 
 @simon_bp.route("/start-lofi/<token>", methods=["GET"])
