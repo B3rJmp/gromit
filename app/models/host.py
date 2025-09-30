@@ -7,9 +7,5 @@ class Host(db.Model):
 
   variables = db.relationship('Variable', backref='host', lazy=True)
 
-  def as_dict(self):
-    return {
-      "id": self.id,
-      "name": self.name,
-      "ip_address": self.ip_address
-    }
+  def __repr__(self):
+    return f"<Host {self.name}>"

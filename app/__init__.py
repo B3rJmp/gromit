@@ -17,8 +17,9 @@ def create_app():
     Migrate(app, db)
 
     from app.blueprints.simon import simon_bp
-    # from blueprints.wallace import wallace_bp
+    from app.blueprints.wallace import wallace_bp
 
     app.register_blueprint(simon_bp)
+    app.register_blueprint(wallace_bp)
 
     return app

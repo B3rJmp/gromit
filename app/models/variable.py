@@ -6,10 +6,5 @@ class Variable(db.Model):
   value = db.Column(db.String(100), nullable=True)
   host_id = db.Column(db.Integer, db.ForeignKey('host.id'), nullable=False)
 
-  def as_dict(self):
-    return {
-      "id": self.id,
-      "key": self.key,
-      "value": self.value,
-      "host": self.host.as_dict(),
-    }
+  def __repr__(self):
+    return f"<Variable {self.key}>"

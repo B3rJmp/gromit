@@ -2,7 +2,6 @@ import os
 import time
 import requests
 import threading
-from app import db
 from app.models import User, Host
 from flask import abort, Blueprint, current_app
 
@@ -54,7 +53,7 @@ def launch_roku_video(video_id, SIMON):
 
 @simon_bp.route("/start-lofi/<token>", methods=["GET"])
 def start_lofi(token):
-    SIMON = Host.query.filter_by(name="Simon").first().as_dict()
+    SIMON = Host.query.filter_by(name="Simon").first()
     user = User.query.filter_by(token=token).first()
     print(SIMON)
     if not user:
@@ -79,5 +78,5 @@ def start_lofi(token):
     except Exception as e:
         return f"YouTube search failed: {e}", 500
 
-    threading.Thread(target=launch_roku_video, args=(video_id,SIMON["ip_address"])).start()
+    threading.Thread(target=launch_roku_video, args=(video_id,SIMON.ip_address)).start()
     return f"Launching: {STATIC_QUERY} ({video_id}) with volume {TARGET_VOLUME}", 200
