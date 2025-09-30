@@ -4,32 +4,31 @@ import requests
 import threading
 from app import db
 from app.models.user import User
-from flask import abort, Blueprint
+from app.models.host import Host
+from flask import abort, Blueprint, current_app
 
 simon_bp = Blueprint("simon_bp", __name__, url_prefix="/simon")
 
-WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN")
-ROKU_IP = os.environ.get("ROKU_IP")
 YOUTUBE_APP_ID = os.environ.get("YOUTUBE_APP_ID", "837")
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
 TARGET_VOLUME = int(os.environ.get("ROKU_VOLUME", "10"))  # default volume 10
 
-if not all([WEBHOOK_TOKEN, ROKU_IP, YOUTUBE_API_KEY]):
+if not all([YOUTUBE_API_KEY]):
     raise ValueError("Missing required environment variables. Check your .env file.")
 
 # Static search query
-STATIC_QUERY = "lofi study music 24 hour"
+STATIC_QUERY = "lofi girl study music 24 hour"
 
-def set_roku_volume(level: int):
+def set_roku_volume(level: int, SIMON):
     try:
         # Push volume down more gradually with short delays
         for _ in range(50):
-            requests.post(f"http://{ROKU_IP}:8060/keypress/VolumeDown", timeout=1)
+            requests.post(f"http://{SIMON}:8060/keypress/VolumeDown", timeout=1)
             time.sleep(0.05)  # small delay to let Roku process
 
         # Raise to target level with delays
         for _ in range(level):
-            requests.post(f"http://{ROKU_IP}:8060/keypress/VolumeUp", timeout=1)
+            requests.post(f"http://{SIMON}:8060/keypress/VolumeUp", timeout=1)
             time.sleep(0.05)
 
         print(f"Volume set to {level}")
@@ -37,9 +36,9 @@ def set_roku_volume(level: int):
         print(f"Error setting volume: {e}")
 
 
-def launch_roku_video(video_id):
+def launch_roku_video(video_id, SIMON):
     # Launch YouTube video
-    launch_url = f"http://{ROKU_IP}:8060/launch/{YOUTUBE_APP_ID}?contentID={video_id}"
+    launch_url = f"http://{SIMON}:8060/launch/{YOUTUBE_APP_ID}?contentID={video_id}"
     try:
         requests.post(launch_url, timeout=2)
         print(f"Video {video_id} launched on Roku")
@@ -51,12 +50,14 @@ def launch_roku_video(video_id):
     time.sleep(3)
 
     # Adjust volume consistently
-    set_roku_volume(TARGET_VOLUME)
+    set_roku_volume(TARGET_VOLUME, simon)
+
 
 @simon_bp.route("/start-lofi/<token>", methods=["GET"])
 def start_lofi(token):
+    SIMON = Host.query.filter_by(name="Simon").first().as_dict()
     user = User.query.filter_by(token=token).first()
-    print(user)
+    print(SIMON)
     if not user:
         abort(403)
 
@@ -79,5 +80,5 @@ def start_lofi(token):
     except Exception as e:
         return f"YouTube search failed: {e}", 500
 
-    threading.Thread(target=launch_roku_video, args=(video_id,)).start()
+    threading.Thread(target=launch_roku_video, args=(video_id,SIMON["ip_address"])).start()
     return f"Launching: {STATIC_QUERY} ({video_id}) with volume {TARGET_VOLUME}", 200
