@@ -2,7 +2,7 @@ import os
 import time
 import requests
 import threading
-from flask import request, abort, Blueprint
+from flask import abort, Blueprint
 
 simon_bp = Blueprint("simon_bp", __name__, url_prefix="/simon")
 

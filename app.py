@@ -1,19 +1,8 @@
-from flask import Flask
-from dotenv import load_dotenv
+from app import create_app
 
-# Load environment variables from .env
-load_dotenv()
-app = Flask(__name__)
-
-from blueprints.simon import simon_bp
-# from blueprints.wallace import wallace_bp
-
-app.register_blueprint(simon_bp)
-# app.register_blueprint(wallace_bp)
-
-
-# Load configuration from environment variables
-
+app = create_app()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    # Start the Flask development server
+    # debug=True enables hot reload and better error messages
+    app.run(debug=True, host="0.0.0.0", port=5000)
