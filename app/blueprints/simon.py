@@ -2,6 +2,8 @@ import os
 import time
 import requests
 import threading
+from app import db
+from app.models.user import User
 from flask import abort, Blueprint
 
 simon_bp = Blueprint("simon_bp", __name__, url_prefix="/simon")
@@ -53,7 +55,9 @@ def launch_roku_video(video_id):
 
 @simon_bp.route("/start-lofi/<token>", methods=["GET"])
 def start_lofi(token):
-    if token != WEBHOOK_TOKEN:
+    user = User.query.filter_by(token=token).first()
+    print(user)
+    if not user:
         abort(403)
 
     # Search YouTube for the static query
