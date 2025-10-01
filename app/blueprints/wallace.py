@@ -33,15 +33,23 @@ def reboot_windows(token):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
     
-@wallace_bp.route("/plex-has-booted/<token>")
+@wallace_bp.route("/plex-has-booted/<token>", methods=["GET", "POST"])
 def update_plex_has_booted(token):
     USER = User.query.filter_by(token=token).first()
     if not USER:
         abort(403)
+
     try:
         HAS_BOOTED = Variable.query.filter_by(key="PLEX_HAS_BOOTED").first()
+        if not HAS_BOOTED:
+            HAS_BOOTED = Variable(key="PLEX_HAS_BOOTED", value="False")
+            db.session.add(HAS_BOOTED)
+
         HAS_BOOTED.value = 'True'
         db.session.commit()
         return f"Plex status set to {HAS_BOOTED.value}"
+
     except Exception as e:
+        db.session.rollback()
         print(f"Error setting PLEX_HAS_BOOTED: {e}")
+        return f"Internal error: {e}", 500
