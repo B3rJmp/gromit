@@ -2,7 +2,7 @@ import os
 import winrm
 from app.models import Host, User, Variable
 from app import db
-from flask import Blueprint, jsonify, abort
+from flask import Blueprint, jsonify, abort, request, json
 
 wallace_bp = Blueprint("wallace_bp", __name__, url_prefix="/wallace")
 
@@ -33,7 +33,7 @@ def reboot_windows(token):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
     
-@wallace_bp.route("/plex-has-booted/<token>", methods=["GET", "POST"])
+@wallace_bp.route("/plex-has-booted/<token>", methods=["GET"])
 def update_plex_has_booted(token):
     USER = User.query.filter_by(token=token).first()
     if not USER:
@@ -53,3 +53,19 @@ def update_plex_has_booted(token):
         db.session.rollback()
         print(f"Error setting PLEX_HAS_BOOTED: {e}")
         return f"Internal error: {e}", 500
+
+@wallace_bp.route("/handle-plex-event", methods=["POST"])
+def handle_plex_event():
+    try:
+        data = json.loads(request.form['payload'])
+        account = data["Account"]["title"]
+        event = data["event"]
+        local_player = bool(data["Player"]["local"])
+        if (account == 'Simon' and (event == 'media.play' or event == 'media.resume') and local_player):
+            #lights on
+            return 'event triggered'
+        else:
+            return "no event triggered"
+    except Exception as e:
+        print(e)
+        return f"Error {e}"
