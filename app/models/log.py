@@ -1,6 +1,8 @@
 from app import db
 
 class Log(db.Model):
+  __tablename__ = "log"
+  
   id = db.Column(db.Integer, primary_key=True)
   user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
   log_type_id = db.Column(db.Integer, db.ForeignKey('log_type.id'), nullable=False)
