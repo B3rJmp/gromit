@@ -8,8 +8,8 @@ services:
       - "12101:12101"
     volumes:
       - ./profiles:/profiles
-    devices:
-      - "/dev/snd:/dev/snd"
+    # devices:
+    #   - "/dev/snd:/dev/snd"
     command: >
       --user-profiles /profiles
       --profile en

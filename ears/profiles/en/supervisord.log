@@ -1,0 +1,4 @@
+2025-10-02 16:03:51,066 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2025-10-02 16:03:51,071 INFO supervisord started with pid 172
+2025-10-02 16:03:52,077 INFO spawned: 'mqtt' with pid 191
+2025-10-02 16:03:53,334 INFO success: mqtt entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
