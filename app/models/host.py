@@ -5,7 +5,7 @@ class Host(db.Model):
   name = db.Column(db.String(50), nullable=False)
   ip_address = db.Column(db.String(50), nullable=True)
 
-  variables = db.relationship('Variable', back_populates='host', lazy=True)
+  variables = db.relationship('Variable', backref='host', lazy=True)
 
   def __repr__(self):
     return f"<Host {self.name}>"

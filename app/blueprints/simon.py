@@ -3,7 +3,7 @@ import time
 import requests
 import threading
 from app import db
-from app.models import User, Host, Log
+from app.models import User, Host
 from flask import abort, Blueprint
 
 simon_bp = Blueprint("simon_bp", __name__, url_prefix="/simon")
@@ -76,11 +76,11 @@ def start_lofi(token):
         if not items:
             return "No videos found", 404
         video_id = items[0]["id"]["videoId"]
-        db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} started lo-fi"))
-        db.session.commit()
+        #db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} started lo-fi"))
+        #db.session.commit()
     except Exception as e:
-        db.session.add(Log(user_id=USER.id,log_type_id=2,description=f"{e}"))
-        db.session.commit()
+        #db.session.add(Log(user_id=USER.id,log_type_id=2,description=f"{e}"))
+        #db.session.commit()
         return f"YouTube search failed: {e}", 500
 
     threading.Thread(target=launch_roku_video, args=(video_id,SIMON.ip_address)).start()
