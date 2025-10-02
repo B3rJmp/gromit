@@ -1,7 +1,7 @@
 from app import db
 
 class Variable(db.Model):
-  __tablename__ = "variable"
+  __tablename__ = "variables"
   
   id = db.Column(db.Integer, primary_key=True)
   key = db.Column(db.String(50), nullable=False)

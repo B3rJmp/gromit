@@ -1,8 +1,8 @@
 from app import db
 
 class LogType(db.Model):
-  __tablename__ = "log_type"
-  
+  __tablename__ = "log_types"
+
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String, nullable=False)
 

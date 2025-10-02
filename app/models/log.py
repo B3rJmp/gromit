@@ -1,7 +1,7 @@
 from app import db
 
 class Log(db.Model):
-  __tablename__ = "log"
+  __tablename__ = "logs"
   
   id = db.Column(db.Integer, primary_key=True)
   user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
