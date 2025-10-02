@@ -5,5 +5,7 @@ class User(db.Model):
   name = db.Column(db.String(50), nullable=False)
   token = db.Column(db.String(100), nullable=False)
 
+  logs = db.relationship('Log', backref='user', lazy=True)
+
   def __repr__(self):
     return f'<User {self.name}>'
