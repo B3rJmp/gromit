@@ -7,5 +7,7 @@ class Log(db.Model):
   description = db.Column(db.String(50), nullable=False)
   timestamp = db.Column(db.DateTime, server_default=db.func.now())
 
+  log_type = db.relationship("LogType", back_populates="logs")
+
   def __repr__(self):
     return f"<Log {self.description}>"
