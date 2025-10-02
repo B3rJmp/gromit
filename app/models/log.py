@@ -1,15 +1,13 @@
 from app import db
 
 class Log(db.Model):
-  __tablename__ = "logs"
-  
   id = db.Column(db.Integer, primary_key=True)
   user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
   log_type_id = db.Column(db.Integer, db.ForeignKey('log_type.id'), nullable=False)
   description = db.Column(db.String(50), nullable=False)
   timestamp = db.Column(db.DateTime, server_default=db.func.now())
 
-  log_type = db.relationship("LogType", back_populates="logs")
+  log_type = db.relationship("LogType", back_populates="log")
 
   def __repr__(self):
     return f"<Log {self.description}>"
