@@ -2,8 +2,9 @@ import os
 import time
 import requests
 import threading
-from app.models import User, Host
-from flask import abort, Blueprint, current_app
+from app import db
+from app.models import User, Host, Log
+from flask import abort, Blueprint
 
 simon_bp = Blueprint("simon_bp", __name__, url_prefix="/simon")
 
@@ -54,9 +55,9 @@ def launch_roku_video(video_id, SIMON):
 @simon_bp.route("/start-lofi/<token>", methods=["GET"])
 def start_lofi(token):
     SIMON = Host.query.filter_by(name="Simon").first()
-    user = User.query.filter_by(token=token).first()
+    USER = User.query.filter_by(token=token).first()
     print(SIMON)
-    if not user:
+    if not USER:
         abort(403)
 
     # Search YouTube for the static query
@@ -75,7 +76,11 @@ def start_lofi(token):
         if not items:
             return "No videos found", 404
         video_id = items[0]["id"]["videoId"]
+        db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} started lo-fi"))
+        db.session.commit()
     except Exception as e:
+        db.session.add(Log(user_id=USER.id,log_type_id=2,description=f"{e}"))
+        db.session.commit()
         return f"YouTube search failed: {e}", 500
 
     threading.Thread(target=launch_roku_video, args=(video_id,SIMON.ip_address)).start()
