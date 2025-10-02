@@ -38,7 +38,7 @@ def reboot_windows(token):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
     
-@wallace_bp.route("/plex-has-booted/<token>", methods=["GET"])
+@wallace_bp.route("/plex-has-booted/<token>", methods=["PUT"])
 def update_plex_has_booted(token):
     USER = User.query.filter_by(token=token).first()
     if not USER:
