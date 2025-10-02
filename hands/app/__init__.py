@@ -14,12 +14,12 @@ def create_app():
   app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
   db.init_app(app)
-  migrate.init_app(app, db)
+  migrate.init_app(app, db, render_as_batch=True)
 
-  from app.blueprints.simon import simon_bp
-  from app.blueprints.wallace import wallace_bp
+  from app.blueprints.television import television_bp
+  from app.blueprints.computer import computer_bp
 
-  app.register_blueprint(simon_bp)
-  app.register_blueprint(wallace_bp)
+  app.register_blueprint(television_bp)
+  app.register_blueprint(computer_bp)
 
   return app

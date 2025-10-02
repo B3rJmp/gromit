@@ -4,13 +4,13 @@ from app.models import Host, User, Variable, Log
 from app import db
 from flask import Blueprint, jsonify, abort, request, json
 
-wallace_bp = Blueprint("wallace_bp", __name__, url_prefix="/wallace")
+computer_bp = Blueprint("computer_bp", __name__, url_prefix="/wallace")
 
 
 USERNAME = os.environ.get("WALLACE_USERNAME")
 PASSWORD = os.environ.get("WALLACE_PASSWORD")
 
-@wallace_bp.route("/reboot/<token>", methods=["GET"])
+@computer_bp.route("/reboot/<token>", methods=["GET"])
 def reboot_windows(token):
     try:
         USER = User.query.filter_by(token=token).first()
@@ -38,7 +38,7 @@ def reboot_windows(token):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
     
-@wallace_bp.route("/plex-has-booted/<token>", methods=["PUT"])
+@computer_bp.route("/plex-has-booted/<token>", methods=["PUT"])
 def update_plex_has_booted(token):
     USER = User.query.filter_by(token=token).first()
     if not USER:
@@ -62,7 +62,7 @@ def update_plex_has_booted(token):
         print(f"Error setting PLEX_HAS_BOOTED: {e}")
         return f"Internal error: {e}", 500
 
-@wallace_bp.route("/handle-plex-event/<token>", methods=["POST"])
+@computer_bp.route("/handle-plex-event/<token>", methods=["POST"])
 def handle_plex_event(token):
     try:
         USER = User.query.filter_by(token=token).first()
