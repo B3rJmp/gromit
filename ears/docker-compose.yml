@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  rhasspy:
+    image: rhasspy/rhasspy
+    container_name: gromit-ears
+    restart: unless-stopped
+    ports:
+      - "12101:12101"
+    volumes:
+      - ./profiles:/profiles
+    devices:
+      - "/dev/snd:/dev/snd"
+    command: >
+      --user-profiles /profiles
+      --profile en
+

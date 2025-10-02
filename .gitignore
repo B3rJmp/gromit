@@ -8,3 +8,7 @@ venv/
 
 # Docker
 *.pid
+
+# Rhasspy cache/logs (if any)
+profiles/*/slots_cache/
+profiles/*/download/
