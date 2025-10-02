@@ -1,6 +1,6 @@
 import os
 import winrm
-from app.models import Host, User, Variable
+from app.models import Host, User, Variable, Log
 from app import db
 from flask import Blueprint, jsonify, abort, request, json
 
@@ -22,12 +22,12 @@ def reboot_windows(token):
         r = session.run_cmd("shutdown", ["/r", "/t", "0"])
         if r.status_code == 0:
             HAS_BOOTED.value = 'False'
-            #db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} rebooted wallace"))
+            db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} rebooted wallace"))
             db.session.commit()
             return jsonify({"status": "success", "message": "Windows reboot initiated"})
         else:
-            #db.session.add(Log(user_id=USER.id,log_type_id=2,description=f"{e}"))
-            #db.session.commit()
+            db.session.add(Log(user_id=USER.id,log_type_id=2,description=f"{e}"))
+            db.session.commit()
             return jsonify({
                 "status": "error",
                 "stdout": r.std_out.decode(),
@@ -49,14 +49,14 @@ def update_plex_has_booted(token):
             db.session.add(HAS_BOOTED)
 
         HAS_BOOTED.value = 'True'
-        #db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} updated Plex status to booted"))
+        db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} updated Plex status to booted"))
         db.session.commit()
         return f"Plex status set to {HAS_BOOTED.value}"
 
     except Exception as e:
         db.session.rollback()
-        #db.session.add(Log(user_id=USER.id,log_type_id=2,description=f"{e}"))
-        #db.session.commit()
+        db.session.add(Log(user_id=USER.id,log_type_id=2,description=f"{e}"))
+        db.session.commit()
         print(f"Error setting PLEX_HAS_BOOTED: {e}")
         return f"Internal error: {e}", 500
 

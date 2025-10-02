@@ -3,13 +3,13 @@ version: "3.9"
 services:
   webhook:
     build: .
-    container_name: gromit
+    container_name: gromit-hands
     ports:
       - "5000:5000"
     env_file:
       - .env
     volumes:
-      - .:/gromit  # mount source for live editing
+      - .:/gromit/hands  # mount source for live editing
     command: sh -c "pip install --no-cache-dir -r requirements.txt && python app.py"
     environment:
       - FLASK_ENV=development

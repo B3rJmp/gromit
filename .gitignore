@@ -1,4 +1,4 @@
-.env
-venv/
-__pycache__/
-instance/*.db
+*/.env
+hands/venv/
+*/__pycache__/
+hands/instance/*.db
