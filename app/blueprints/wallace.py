@@ -54,9 +54,12 @@ def update_plex_has_booted(token):
         print(f"Error setting PLEX_HAS_BOOTED: {e}")
         return f"Internal error: {e}", 500
 
-@wallace_bp.route("/handle-plex-event", methods=["POST"])
-def handle_plex_event():
+@wallace_bp.route("/handle-plex-event/<token>", methods=["POST"])
+def handle_plex_event(token):
     try:
+        USER = User.query.filter_by(token=token).first()
+        if not USER or USER.name != 'Wallace':
+            abort(403)
         data = json.loads(request.form['payload'])
         account = data["Account"]["title"]
         event = data["event"]
