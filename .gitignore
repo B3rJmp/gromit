@@ -1,5 +1,10 @@
-*/.env
-hands/venv/
-*/__pycache__/
-hands/instance/*.db
+# Python
+__pycache__/
 *.pyc
+*.pyo
+venv/
+*.db
+*/.env
+
+# Docker
+*.pid
