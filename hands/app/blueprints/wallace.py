@@ -6,6 +6,10 @@ from flask import Blueprint, jsonify, abort, request, json
 
 wallace_bp = Blueprint("wallace_bp", __name__, url_prefix="/wallace")
 
+
+USERNAME = os.environ.get("WALLACE_USERNAME")
+PASSWORD = os.environ.get("WALLACE_PASSWORD")
+
 @wallace_bp.route("/reboot/<token>", methods=["GET"])
 def reboot_windows(token):
     try:
@@ -15,8 +19,6 @@ def reboot_windows(token):
             abort(403)
         if not bool(HAS_BOOTED.value):
             abort(200)
-        USERNAME = Variable.query.filter_by(key="WALLACE_USERNAME").first().value
-        PASSWORD = Variable.query.filter_by(key="WALLACE_PASSWORD").first().value
         WALLACE = Host.query.filter_by(name="Wallace").first().ip_address
         session = winrm.Session(WALLACE, auth=(USERNAME, PASSWORD))
         r = session.run_cmd("shutdown", ["/r", "/t", "0"])
