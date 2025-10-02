@@ -2,3 +2,4 @@
 hands/venv/
 */__pycache__/
 hands/instance/*.db
+*.pyc

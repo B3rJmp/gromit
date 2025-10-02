@@ -21,14 +21,30 @@ STATIC_QUERY = "lofi girl study music 24 hour"
 def set_roku_volume(level: int, SIMON):
     try:
         # Push volume down more gradually with short delays
-        for _ in range(50):
-            requests.post(f"http://{SIMON}:8060/keypress/VolumeDown", timeout=1)
-            time.sleep(0.05)  # small delay to let Roku process
+        requests.post(
+            f"http://{SIMON}:8060/keydown/VolumeDown",
+            timeout=5
+        )
 
-        # Raise to target level with delays
-        for _ in range(level):
-            requests.post(f"http://{SIMON}:8060/keypress/VolumeUp", timeout=1)
-            time.sleep(0.05)
+        time.sleep(5)
+        requests.post(
+            f"http://{SIMON}:8060/keyup/VolumeDown",
+            timeout=5
+        )
+
+        time.sleep(5)
+
+        # Push and hold volume up
+        requests.post(
+            f"http://{SIMON}:8060/keydown/VolumeUp",
+            timeout=5
+        )
+
+        time.sleep(2.5)
+        requests.post(
+            f"http://{SIMON}:8060/keyup/VolumeUp",
+            timeout=5
+        )
 
         print(f"Volume set to {level}")
     except Exception as e:
@@ -39,14 +55,14 @@ def launch_roku_video(video_id, SIMON):
     # Launch YouTube video
     launch_url = f"http://{SIMON}:8060/launch/{YOUTUBE_APP_ID}?contentID={video_id}"
     try:
-        requests.post(launch_url, timeout=2)
+        requests.post(launch_url, timeout=5)
         print(f"Video {video_id} launched on Roku")
     except Exception as e:
         print(f"Error launching video: {e}")
         return
 
     # Give Roku a moment to start the app
-    time.sleep(3)
+    time.sleep(5)
 
     # Adjust volume consistently
     set_roku_volume(TARGET_VOLUME, SIMON)
@@ -76,12 +92,10 @@ def start_lofi(token):
         if not items:
             return "No videos found", 404
         video_id = items[0]["id"]["videoId"]
-        db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} started lo-fi"))
-        db.session.commit()
     except Exception as e:
-        db.session.add(Log(user_id=USER.id,log_type_id=2,description=f"{e}"))
-        db.session.commit()
         return f"YouTube search failed: {e}", 500
 
     threading.Thread(target=launch_roku_video, args=(video_id,SIMON.ip_address)).start()
+    db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} started lo-fi"))
+    db.session.commit()
     return f"Launching: {STATIC_QUERY} ({video_id}) with volume {TARGET_VOLUME}", 200
