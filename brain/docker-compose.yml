@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  db:
+    image: mysql:8.0
+    container_name: gromit-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: gromit
+      MYSQL_USER: gromit
+      MYSQL_PASSWORD: 0$I4ar00Md4DAXczUc2dBXu&F
+      MYSQL_ROOT_PASSWORD: yO#A#0K3S!sF11qamapofdik5
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
