@@ -1,6 +1,7 @@
 import os
 import time
 import requests
+import unicodedata
 import xml.etree.ElementTree as ET
 import threading
 from app import db
@@ -130,9 +131,8 @@ def launch_app(app_name, host_name, token):
             MATCHED_HOST_APP = try_to_find_host_app(HOST_APPS, APP)
             if not MATCHED_HOST_APP:
                 raise TypeError("No app was able to be matched")
-            APP_TO_UPDATE = HostApp.query.filter_by(id=MATCHED_HOST_APP.id).first()
-            APP_TO_UPDATE.gromit_app_name = app_name
-            db.session.add(APP_TO_UPDATE)
+            MATCHED_HOST_APP.app_id = APP.id
+            db.session.add(MATCHED_HOST_APP)
             db.session.commit()
         except Exception as e:
             return f"Error: {e}"
@@ -183,7 +183,15 @@ def query_host_for_apps(host):
     return apps
 
 def normalize_app_name(name):
-    return name.lower().replace(" ", "").replace("-", "").replace("_", "").replace("+", "")
+    # Convert to lowercase
+    name = name.lower()
+    # Remove dashes, underscores, plus
+    for ch in "-_+":
+        name = name.replace(ch, "")
+    # Normalize Unicode, remove all whitespace
+    name = unicodedata.normalize("NFKD", name)
+    name = "".join(c for c in name if not c.isspace())
+    return name
 
 def try_to_find_host_app(apps, target_app):
     
@@ -191,6 +199,9 @@ def try_to_find_host_app(apps, target_app):
 
     for app in apps:
         app_name = app.host_app_name.strip()
+        print(193,normalize_app_name(app.host_app_name.strip()))
+        print(194,formatted_name)
+        print(195,normalize_app_name(app.host_app_name.strip()).find(formatted_name))
         if normalize_app_name(app_name).find(formatted_name) != -1:
             return app
     return None
