@@ -4,7 +4,7 @@ import requests
 import xml.etree.ElementTree as ET
 import threading
 from app import db
-from app.models import User, Host, Log, HostApp
+from app.models import *
 from flask import abort, Blueprint, request, jsonify
 
 television_bp = Blueprint("television_bp", __name__)
@@ -106,24 +106,31 @@ def launch_app(app_name, host_name, token):
     if not USER:
         abort(403)
     HOST = Host.query.filter_by(name=host_name).first()
-    APPS = HostApp.query.filter_by(host_id=HOST.id).all()
-    if not APPS:
+    if not HOST:
+        abort(404)
+    APP = App.query.filter_by(name=app_name).first()
+    if not APP:
+        db.session.add(App(name=app_name))
+        db.session.commit()
+        APP = App.query.filter_by(name=app_name).first()
+    HOST_APPS = HostApp.query.filter_by(host_id=HOST.id).all()
+    if not HOST_APPS:
         try:
             apps = query_host_for_apps(HOST)
             for app in apps:
                 db.session.add(HostApp(host_app_name=app["app_name"], host_app_id=app["app_id"], host_id=HOST.id))
             db.session.commit()
-            APPS = HostApp.query.filter_by(host_id=HOST.id).all()
+            HOST_APPS = HostApp.query.filter_by(host_id=HOST.id).all()
         except Exception as e:
             return f"Error: {e}"
         
-    MATCHED_APP = next((app for app in APPS if app.gromit_app_name and app.gromit_app_name == app_name), None)
-    if not MATCHED_APP:
+    MATCHED_HOST_APP = next((app for app in HOST_APPS if app.app_id and app.app_id == APP.id), None)
+    if not MATCHED_HOST_APP:
         try:
-            MATCHED_APP = try_to_find_host_app(APPS, app_name)
-            if not MATCHED_APP:
+            MATCHED_HOST_APP = try_to_find_host_app(HOST_APPS, APP)
+            if not MATCHED_HOST_APP:
                 raise TypeError("No app was able to be matched")
-            APP_TO_UPDATE = HostApp.query.filter_by(id=MATCHED_APP.id).first()
+            APP_TO_UPDATE = HostApp.query.filter_by(id=MATCHED_HOST_APP.id).first()
             APP_TO_UPDATE.gromit_app_name = app_name
             db.session.add(APP_TO_UPDATE)
             db.session.commit()
@@ -131,6 +138,7 @@ def launch_app(app_name, host_name, token):
             return f"Error: {e}"
     # if not APP_ID:
     #     return "No app found", 404
+    # return MATCHED_HOST_APP
     QUERY = request.args.get('query') if request.args.get('query') else None
     
     if QUERY:
@@ -142,7 +150,7 @@ def launch_app(app_name, host_name, token):
     base_url = f"http://{HOST.ip_address}"
     if HOST.port_number:
         base_url += f":{HOST.port_number}"
-    launch_path = f"/launch/{MATCHED_APP.host_app_id}"
+    launch_path = f"/launch/{MATCHED_HOST_APP.host_app_id}"
     content_id_arg = f"?contentId={content_id}" if content_id else ""
     launch_url = base_url + launch_path + content_id_arg
     try:
@@ -179,7 +187,7 @@ def normalize_app_name(name):
 
 def try_to_find_host_app(apps, target_app):
     
-    formatted_name = normalize_app_name(target_app)
+    formatted_name = normalize_app_name(target_app.name)
 
     for app in apps:
         app_name = app.host_app_name.strip()
