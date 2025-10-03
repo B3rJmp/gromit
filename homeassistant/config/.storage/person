@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "minor_version": 1,
+  "key": "person",
+  "data": {
+    "items": [
+      {
+        "id": "b3rjmp",
+        "name": "B3rJmp",
+        "user_id": "a7123d0fc3d74f2da5c8e34280b19a54",
+        "device_trackers": []
+      }
+    ]
+  }
+}

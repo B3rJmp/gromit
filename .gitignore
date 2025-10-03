@@ -8,3 +8,30 @@ venv/
 
 # Docker
 *.pid
+
+#homeassistant
+# Ignore Home Assistant runtime files
+home-assistant_v2.db        # SQLite database (history/logs)
+*.log                       # Log files
+*.pid                       # Process IDs
+*.sock                      # Socket files
+*.pyc                       # Compiled Python files
+__pycache__/                # Python cache directories
+
+# Ignore secrets and credentials
+secrets.yaml                # Contains API keys, passwords
+.ios.conf                    # iOS companion app config
+.cloud                      # Nabu Casa cloud files
+.auth                        # Auth tokens
+*.storage                   # JSON storage files (tokens, auth, entity IDs)
+
+# Ignore media and downloads (optional)
+media/                      # If you have local media you don’t want in git
+
+# Ignore backups
+.backups/                   # Snapshots/backups
+
+# Ignore temporary files
+*.swp                       # Vim swap files
+*.swo
+*.tmp
