@@ -10,7 +10,7 @@ migrate = Migrate()
 def create_app():
   # Load environment variables from .env 
   app = Flask(__name__)
-  app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+  app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://gromit:0IaABr00N9sZO35mMgg443SEE@brain:3306/gromit"
   app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
   db.init_app(app)

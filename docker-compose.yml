@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  hands:
+    build: 
+      context: ./hands
+      dockerfile: Dockerfile
+    depends_on:
+      - brain
+    container_name: hands
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./hands/.env
+    volumes:
+      - ./hands:/gromit/hands
+    command: sh -c "pip install --no-cache-dir -r /gromit/hands/requirements.txt && python app.py"
+    environment:
+      - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+  brain:
+    image: mysql:8.0
+    container_name: brain
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: gromit
+      MYSQL_USER: gromit
+      MYSQL_PASSWORD: 0IaABr00N9sZO35mMgg443SEE
+      MYSQL_ROOT_PASSWORD: LBDt3pzj9xKY3rDqqe6FvM7kd
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+volumes:
+  mysql_data:
