@@ -1,10 +1,11 @@
 import os
 import time
 import requests
+import xml.etree.ElementTree as ET
 import threading
 from app import db
-from app.models import User, Host, Log
-from flask import abort, Blueprint
+from app.models import User, Host, Log, HostApp
+from flask import abort, Blueprint, request, jsonify
 
 television_bp = Blueprint("television_bp", __name__)
 
@@ -68,9 +69,9 @@ def launch_roku_video(video_id, ip_address):
     set_roku_volume(TARGET_VOLUME, ip_address)
 
 
-@television_bp.route("/<hostname>/start-lofi/<token>", methods=["GET"])
-def start_lofi(hostname, token):
-    TELEVISION = Host.query.filter_by(name=hostname).first()
+@television_bp.route("/<host_name>/start-lofi/<token>", methods=["GET"])
+def start_lofi(host_name, token):
+    HOST = Host.query.filter_by(name=host_name).first()
     USER = User.query.filter_by(token=token).first()
     if not USER:
         abort(403)
@@ -94,7 +95,98 @@ def start_lofi(hostname, token):
     except Exception as e:
         return f"YouTube search failed: {e}", 500
 
-    threading.Thread(target=launch_roku_video, args=(video_id,TELEVISION.ip_address)).start()
+    threading.Thread(target=launch_roku_video, args=(video_id,HOST.ip_address)).start()
     db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} started lo-fi"))
     db.session.commit()
     return f"Launching: {STATIC_QUERY} ({video_id}) with volume {TARGET_VOLUME}", 200
+
+@television_bp.route("/launch/<app_name>/<host_name>/<token>")
+def launch_app(app_name, host_name, token):
+    USER = User.query.filter_by(token=token).first()
+    if not USER:
+        abort(403)
+    HOST = Host.query.filter_by(name=host_name).first()
+    APPS = HostApp.query.filter_by(host_id=HOST.id).all()
+    if not APPS:
+        try:
+            apps = query_host_for_apps(HOST)
+            for app in apps:
+                db.session.add(HostApp(host_app_name=app["app_name"], host_app_id=app["app_id"], host_id=HOST.id))
+            db.session.commit()
+            APPS = HostApp.query.filter_by(host_id=HOST.id).all()
+        except Exception as e:
+            return f"Error: {e}"
+        
+    MATCHED_APP = next((app for app in APPS if app.gromit_app_name and app.gromit_app_name == app_name), None)
+    if not MATCHED_APP:
+        try:
+            MATCHED_APP = try_to_find_host_app(APPS, app_name)
+            if not MATCHED_APP:
+                raise TypeError("No app was able to be matched")
+            APP_TO_UPDATE = HostApp.query.filter_by(id=MATCHED_APP.id).first()
+            APP_TO_UPDATE.gromit_app_name = app_name
+            db.session.add(APP_TO_UPDATE)
+            db.session.commit()
+        except Exception as e:
+            return f"Error: {e}"
+    # if not APP_ID:
+    #     return "No app found", 404
+    QUERY = request.args.get('query') if request.args.get('query') else None
+    
+    if QUERY:
+        content_id = handle_content_query(QUERY, app_name)
+    else:
+        content_id = None
+    
+
+    base_url = f"http://{HOST.ip_address}"
+    if HOST.port_number:
+        base_url += f":{HOST.port_number}"
+    launch_path = f"/launch/{MATCHED_APP.host_app_id}"
+    content_id_arg = f"?contentId={content_id}" if content_id else ""
+    launch_url = base_url + launch_path + content_id_arg
+    try:
+        requests.post(launch_url, timeout=5)
+        print(f"{app_name} launched on {HOST.name}")
+        return f"{app_name} launched on {HOST.name}", 200
+    except Exception as e:
+        return f"Error: {e}", 500
+
+def query_host_for_apps(host):
+    import requests
+    import xml.etree.ElementTree as ET
+
+    # Build the query URL
+    if host.port_number and host.port_number != "80":
+        url = f"http://{host.ip_address}:{host.port_number}/query/apps"
+    else:
+        url = f"http://{host.ip_address}/query/apps"
+        
+    resp = requests.get(url)
+    resp.raise_for_status()
+
+    # Parse XML
+    root = ET.fromstring(resp.text)
+    apps = []
+    for app in root.findall("app"):
+        app_text = app.text.strip().lower()
+        app_id = app.attrib["id"]
+        apps.append({"app_name": app_text, "app_id": app_id})
+    return apps
+
+def normalize_app_name(name):
+    return name.lower().replace(" ", "").replace("-", "").replace("_", "").replace("+", "")
+
+def try_to_find_host_app(apps, target_app):
+    
+    formatted_name = normalize_app_name(target_app)
+
+    for app in apps:
+        app_name = app.host_app_name.strip()
+        if normalize_app_name(app_name).find(formatted_name) != -1:
+            return app
+    return None
+
+    
+def handle_content_query(query, app_name):
+    return 'blah'
