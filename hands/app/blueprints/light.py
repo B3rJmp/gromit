@@ -1,24 +1,24 @@
 from flask import abort, Blueprint, request, jsonify
 from app.controllers import Light
-from app.models import Host, Variable
+from app.models import User, Host, Variable, Log
 
 light_bp = Blueprint("light_bp", __name__, url_prefix="/light")
 
-@light_bp.route("/<location>/<state>", methods=["GET"])
-def hand_single_light(location, state):
-  host = Host.query.filter_by(name=location).first()
+@light_bp.route("/<location>/<state>/<token>", methods=["GET"])
+def handle_light(location, state, token):
+  USER = User.query.filter_by(token = token).first()
+  if not USER:
+    abort(403)
+  if(location == 'all'):
+    hosts = Host.query.filter_by(host_type_id = 3).all()
+  else:
+    hosts = [Host.query.filter_by(name=location).first()]
   try:
-    control_light(host.ip_address, state)
+    for host in hosts:
+      control_light(host.ip_address, state)
     return f"{location} set to {state}"
   except Exception as e:
     return f"Error: {e}", 500
-  
-@light_bp.route("/all/<state>", methods=["GET"])
-def handle_all_lights(state):
-  hosts = Host.query.filter_by(host_type_id=3).all()
-  for host in hosts:
-    control_light(host.ip_address, state)
-  return f"all lights set to {state}"
 
 def control_light(ip_address, state):
   USERNAME = Variable.query.filter_by(key="LIGHTS_USERNAME").first().value
