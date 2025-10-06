@@ -19,8 +19,10 @@ def reboot_windows(token):
             abort(403)
         if not bool(HAS_BOOTED.value):
             abort(200)
-        WALLACE = Host.query.filter_by(name="Wallace").first().ip_address
-        session = winrm.Session(WALLACE, auth=(USERNAME, PASSWORD))
+        WALLACE = Host.query.filter_by(name="Wallace").first()
+        WALLACE_USERNAME = Variable.query.filter_by(key="WALLACE_USERNAME").first()
+        WALLACE_PASSWORD = Variable.query.filter_by(key="WALLACE_PASSWORD").first()
+        session = winrm.Session(WALLACE.ip_address, auth=(WALLACE_USERNAME.value, WALLACE_PASSWORD.value))
         r = session.run_cmd("shutdown", ["/r", "/t", "0"])
         if r.status_code == 0:
             HAS_BOOTED.value = 'False'

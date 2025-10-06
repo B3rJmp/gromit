@@ -18,8 +18,10 @@ def create_app():
 
   from app.blueprints.television import television_bp
   from app.blueprints.computer import computer_bp
+  from app.blueprints.light import light_bp
 
   app.register_blueprint(television_bp)
   app.register_blueprint(computer_bp)
+  app.register_blueprint(light_bp)
 
   return app
