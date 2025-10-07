@@ -1,5 +1,6 @@
 import os
 import winrm
+import time
 from app.models import Host, User, Variable, Log
 from app.controllers import Light
 from app import db
@@ -81,6 +82,7 @@ def handle_plex_event(token):
             if event == 'media.play' or event == 'media.resume':
                 all_lights_off(USER)
             elif event == 'media.stop':
+                time.sleep(30)
                 kitchen_lights_on(USER)
         else:
             return "no event triggered"
