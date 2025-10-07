@@ -80,6 +80,8 @@ def handle_plex_event(token):
         if account == 'B3rJmp' and local_player and (client == "Simon" or client == "Garfunkel"):
             if event == 'media.play' or event == 'media.resume':
                 all_lights_off(USER)
+            elif event == 'media.stop':
+                kitchen_lights_on(USER)
         else:
             return "no event triggered"
     except Exception as e:
@@ -103,4 +105,27 @@ def all_lights_off(user):
     except Exception as e:
         print(23, e)
         db.session.add(Log(user_id=user.id,log_type_id=2,description=f"{user.name} failed to switched all lights to off"))
+        return f"Error: {e}", 500
+    
+def kitchen_lights_on(user):
+    db.session.add(Log(user_id=user.id,log_type_id=1,description=f"{user.name} initiated light switch"))
+    hosts = Host.query.filter_by(host_type_id = 3).all()
+    targetted_hosts = []
+    for host in hosts:
+        if host.name == 'kitchen' or host.name == 'dining':
+            targetted_hosts.append(host)
+    try:
+        for host in targetted_hosts:
+            USERNAME = Variable.query.filter_by(key="LIGHTS_USERNAME").first().value
+            PASSWORD = Variable.query.filter_by(key="LIGHTS_PASSWORD").first().value
+            try:
+                light = Light(host.ip_address, USERNAME,PASSWORD)
+                light.turn_on()
+            except Exception as e:
+                raise f"Error: {e}"
+        db.session.add(Log(user_id=user.id,log_type_id=3,description=f"{user.name} switched kitchen lights to on"))
+        return f"kitchen set to on"
+    except Exception as e:
+        print(23, e)
+        db.session.add(Log(user_id=user.id,log_type_id=2,description=f"{user.name} failed to switched kitchen lights to on"))
         return f"Error: {e}", 500
