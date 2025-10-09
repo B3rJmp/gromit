@@ -81,8 +81,10 @@ def handle_plex_event(token):
         if account == 'B3rJmp' and local_player and (client == "Simon" or client == "Garfunkel"):
             if event == 'media.play' or event == 'media.resume':
                 all_lights_off(USER)
+                return "lights off"
             elif event == 'media.stop':
                 kitchen_lights_on(USER)
+                return "kitchen on"
         else:
             return "no event triggered"
     except Exception as e:
