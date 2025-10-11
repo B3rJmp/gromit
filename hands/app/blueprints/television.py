@@ -10,17 +10,7 @@ from flask import abort, Blueprint, request, jsonify
 
 television_bp = Blueprint("television_bp", __name__)
 
-YOUTUBE_APP_ID = os.environ.get("YOUTUBE_APP_ID", "837")
-YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
-TARGET_VOLUME = int(os.environ.get("ROKU_VOLUME", "10"))  # default volume 10
-
-if not all([YOUTUBE_API_KEY]):
-    raise ValueError("Missing required environment variables. Check your .env file.")
-
-# Static search query
-STATIC_QUERY = "lofi girl music"
-
-def set_roku_volume(level: int, ip_address):
+def set_roku_volume(ip_address):
     try:
         # Push volume down more gradually with short delays
         requests.post(
@@ -28,13 +18,13 @@ def set_roku_volume(level: int, ip_address):
             timeout=5
         )
 
-        time.sleep(5)
+        time.sleep(7)
         requests.post(
             f"http://{ip_address}:8060/keyup/VolumeDown",
             timeout=5
         )
 
-        time.sleep(5)
+        time.sleep(3)
 
         # Push and hold volume up
         requests.post(
@@ -53,9 +43,9 @@ def set_roku_volume(level: int, ip_address):
         print(f"Error setting volume: {e}")
 
 
-def launch_roku_video(video_id, ip_address):
+def launch_roku_video(video_id, ip_address, app_id):
     # Launch YouTube video
-    launch_url = f"http://{ip_address}:8060/launch/{YOUTUBE_APP_ID}?contentID={video_id}"
+    launch_url = f"http://{ip_address}:8060/launch/{app_id}?contentID={video_id}"
     try:
         requests.post(launch_url, timeout=5)
         print(f"Video {video_id} launched on Roku")
@@ -67,7 +57,7 @@ def launch_roku_video(video_id, ip_address):
     time.sleep(5)
 
     # Adjust volume consistently
-    set_roku_volume(TARGET_VOLUME, ip_address)
+    set_roku_volume(ip_address)
 
 
 @television_bp.route("/<host_name>/start-lofi/<token>", methods=["GET"])
@@ -76,6 +66,14 @@ def start_lofi(host_name, token):
     USER = User.query.filter_by(token=token).first()
     if not USER:
         abort(403)
+    YOUTUBE_APP_ID = HostApp.query.filter_by(host_app_name="youtube").first().host_app_id
+    YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
+
+    if not all([YOUTUBE_API_KEY]):
+        raise ValueError("Missing required environment variables. Check your .env file.")
+
+    # Static search query
+    STATIC_QUERY = "lofi girl music"
 
     # Search YouTube for the static query
     try:
@@ -96,10 +94,10 @@ def start_lofi(host_name, token):
     except Exception as e:
         return f"YouTube search failed: {e}", 500
 
-    threading.Thread(target=launch_roku_video, args=(video_id,HOST.ip_address)).start()
+    threading.Thread(target=launch_roku_video, args=(video_id,HOST.ip_address,YOUTUBE_APP_ID)).start()
     db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} started lo-fi"))
     db.session.commit()
-    return f"Launching: {STATIC_QUERY} ({video_id}) with volume {TARGET_VOLUME}", 200
+    return f"Launching: {STATIC_QUERY} ({video_id})", 200
 
 @television_bp.route("/launch/<app_name>/<host_name>/<token>")
 def launch_app(app_name, host_name, token):
@@ -136,9 +134,6 @@ def launch_app(app_name, host_name, token):
             db.session.commit()
         except Exception as e:
             return f"Error: {e}"
-    # if not APP_ID:
-    #     return "No app found", 404
-    # return MATCHED_HOST_APP
     QUERY = request.args.get('query') if request.args.get('query') else None
     
     if QUERY:
