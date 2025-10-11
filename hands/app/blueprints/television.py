@@ -37,8 +37,6 @@ def set_roku_volume(ip_address):
             f"http://{ip_address}:8060/keyup/VolumeUp",
             timeout=5
         )
-
-        print(f"Volume set to {level}")
     except Exception as e:
         print(f"Error setting volume: {e}")
 
