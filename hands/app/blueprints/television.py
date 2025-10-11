@@ -93,7 +93,7 @@ def start_lofi(host_name, token):
         return f"YouTube search failed: {e}", 500
 
     threading.Thread(target=launch_roku_video, args=(video_id,HOST.ip_address,YOUTUBE_APP_ID)).start()
-    db.session.add(Log(user_id=USER.id,log_type_id=1,description=f"{USER.name} started lo-fi"))
+    db.session.add(Log(user_id=USER.id,log_type_id=3,description=f"{USER.name} started lo-fi"))
     db.session.commit()
     return f"Launching: {STATIC_QUERY} ({video_id})", 200
 
