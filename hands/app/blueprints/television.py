@@ -18,7 +18,7 @@ if not all([YOUTUBE_API_KEY]):
     raise ValueError("Missing required environment variables. Check your .env file.")
 
 # Static search query
-STATIC_QUERY = "lofi girl study music 24 hour"
+STATIC_QUERY = "lofi girl music"
 
 def set_roku_volume(level: int, ip_address):
     try:
