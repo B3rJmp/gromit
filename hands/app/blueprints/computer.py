@@ -78,7 +78,7 @@ def handle_plex_event(token):
         local_player = bool(data["Player"]["local"])
         client = data["Player"]["title"]
         print(78,account,event,local_player,data["Player"])
-        if account == 'B3rJmp' and local_player and (client == "Simon" or client == "Garfunkel"):
+        if account == 'B3rJmp' and local_player and (client == "Simon"):
             if event == 'media.play' or event == 'media.resume':
                 all_lights_off(USER)
                 return "lights off"
