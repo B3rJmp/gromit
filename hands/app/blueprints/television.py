@@ -80,16 +80,25 @@ def start_lofi(host_name, token):
             "part": "snippet",
             "q": STATIC_QUERY,
             "type": "video",
-            "maxResults": 1,
+            "maxResults": 5,
             "key": YOUTUBE_API_KEY
         }
         resp = requests.get(search_url, params=params)
         resp.raise_for_status()
-        items = resp.json().get("items")
-        if not items:
-            return "No videos found", 404
-        video_id = items[0]["id"]["videoId"]
+        items = resp.json().get("items", [])
+
+        video_id = None
+        for item in items:
+            if item.get("id", {}).get("kind") == "youtube#video":
+                video_id = item["id"]["videoId"]
+                break
+
+        if not video_id:
+            return "No video results found", 404
+
     except Exception as e:
+        db.session.add(Log(user_id=USER.id,log_type_id=2,description=f"{USER.name} started lo-fi"))
+        db.session.commit()
         return f"YouTube search failed: {e}", 500
 
     threading.Thread(target=launch_roku_video, args=(video_id,HOST.ip_address,YOUTUBE_APP_ID)).start()
