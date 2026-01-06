@@ -1,6 +1,8 @@
 import os
 import winrm
+import time
 from app.models import Host, User, Variable, Log
+from app.controllers import Light
 from app import db
 from flask import Blueprint, jsonify, abort, request, json
 
@@ -19,8 +21,10 @@ def reboot_windows(token):
             abort(403)
         if not bool(HAS_BOOTED.value):
             abort(200)
-        WALLACE = Host.query.filter_by(name="Wallace").first().ip_address
-        session = winrm.Session(WALLACE, auth=(USERNAME, PASSWORD))
+        WALLACE = Host.query.filter_by(name="Wallace").first()
+        WALLACE_USERNAME = Variable.query.filter_by(key="WALLACE_USERNAME").first()
+        WALLACE_PASSWORD = Variable.query.filter_by(key="WALLACE_PASSWORD").first()
+        session = winrm.Session(WALLACE.ip_address, auth=(WALLACE_USERNAME.value, WALLACE_PASSWORD.value))
         r = session.run_cmd("shutdown", ["/r", "/t", "0"])
         if r.status_code == 0:
             HAS_BOOTED.value = 'False'
@@ -72,11 +76,59 @@ def handle_plex_event(token):
         account = data["Account"]["title"]
         event = data["event"]
         local_player = bool(data["Player"]["local"])
-        if (account == 'Simon' and (event == 'media.play' or event == 'media.resume') and local_player):
-            #lights on
-            return 'event triggered'
+        client = data["Player"]["title"]
+        print(78,account,event,local_player,data["Player"])
+        if account == 'B3rJmp' and local_player and (client == "Simon"):
+            if event == 'media.play' or event == 'media.resume':
+                all_lights_off(USER)
+                return "lights off"
+            elif event == 'media.stop':
+                kitchen_lights_on(USER)
+                return "kitchen on"
         else:
             return "no event triggered"
     except Exception as e:
         print(e)
         return f"Error {e}"
+    
+def all_lights_off(user):
+    db.session.add(Log(user_id=user.id,log_type_id=1,description=f"{user.name} initiated light switch"))
+    hosts = Host.query.filter_by(host_type_id = 3).all()
+    try:
+        for host in hosts:
+            USERNAME = Variable.query.filter_by(key="LIGHTS_USERNAME").first().value
+            PASSWORD = Variable.query.filter_by(key="LIGHTS_PASSWORD").first().value
+            try:
+                light = Light(host.ip_address, USERNAME,PASSWORD)
+                light.turn_off()
+            except Exception as e:
+                raise f"Error: {e}"
+        db.session.add(Log(user_id=user.id,log_type_id=3,description=f"{user.name} switched all lights to off"))
+        return f"all set to off"
+    except Exception as e:
+        print(23, e)
+        db.session.add(Log(user_id=user.id,log_type_id=2,description=f"{user.name} failed to switched all lights to off"))
+        return f"Error: {e}", 500
+    
+def kitchen_lights_on(user):
+    db.session.add(Log(user_id=user.id,log_type_id=1,description=f"{user.name} initiated light switch"))
+    hosts = Host.query.filter_by(host_type_id = 3).all()
+    targetted_hosts = []
+    for host in hosts:
+        if host.name == 'kitchen' or host.name == 'dining':
+            targetted_hosts.append(host)
+    try:
+        for host in targetted_hosts:
+            USERNAME = Variable.query.filter_by(key="LIGHTS_USERNAME").first().value
+            PASSWORD = Variable.query.filter_by(key="LIGHTS_PASSWORD").first().value
+            try:
+                light = Light(host.ip_address, USERNAME,PASSWORD)
+                light.turn_on()
+            except Exception as e:
+                raise f"Error: {e}"
+        db.session.add(Log(user_id=user.id,log_type_id=3,description=f"{user.name} switched kitchen lights to on"))
+        return f"kitchen set to on"
+    except Exception as e:
+        print(23, e)
+        db.session.add(Log(user_id=user.id,log_type_id=2,description=f"{user.name} failed to switched kitchen lights to on"))
+        return f"Error: {e}", 500
