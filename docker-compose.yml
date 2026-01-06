@@ -33,16 +33,16 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
-  remote:
-    container_name: remote
+  home_assistant:
+    container_name: home_assistant
     image: ghcr.io/home-assistant/home-assistant:stable
     volumes:
       - ./remote/config:/config
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
-    # network_mode: host
-    ports:
-      - "8123:8123"
+    network_mode: host
+    # ports:
+    #   - "8123:8123"
 
 volumes:
   mysql_data:
